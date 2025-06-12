@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 圖像辨識翻譯</title>
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="./manifest.json">
+    <!-- Theme Color for browsers -->
+    <meta name="theme-color" content="#007bff">
+    <!-- Apple Touch Icon for iOS Safari -->
+    <link rel="apple-touch-icon" href="./112992.jpg">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"],
+        select,
+        input[type="range"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+        }
+        input[type="range"] {
+             padding: 0; /* Range input padding adjustment */
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1em;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+        button.secondary:hover {
+            background-color: #545b62;
+        }
+        #cameraView, #appView {
+            width: 100%;
+        }
+        #videoPreview {
+            width: 100%;
+            max-width: 480px;
+            height: auto;
+            border: 1px solid #ccc;
+            background-color: #000;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px; /* Adjusted margin */
+            cursor: pointer; /* For tap-to-focus hint */
+        }
+        #capturedImage { /* This ID is now for the preview image */
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px; /* Spacing below preview image */
+            display: none; /* Initially hidden */
+        }
+        .info-display-area {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: var(--border-radius);
+            min-height: 50px;
+            word-wrap: break-word;
+            font-size: 0.95em;
+            white-space: pre-wrap; /* To preserve newlines from AI before markdown */
+            position: relative; /* For positioning the copy button */
+        }
+        .info-display-area h1,
+        .info-display-area h2,
+        .info-display-area h3,
+        .info-display-area h4,
+        .info-display-area h5,
+        .info-display-area h6 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        .info-display-area h1 { font-size: 1.5em; }
+        .info-display-area h2 { font-size: 1.3em; }
+        .info-display-area h3 { font-size: 1.2em; }
+        .info-display-area p {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            line-height: 1.6;
+        }
+        .info-display-area ul, .info-display-area ol {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            padding-left: 20px;
+        }
+        .info-display-area li {
+            margin-bottom: 0.3em;
+        }
+        .info-display-area hr {
+            border: 0;
+            height: 1px;
+            background-color: #ccc;
+            margin: 1em 0;
+        }
+        .info-display-area strong {
+            font-weight: bold;
+        }
+        .info-display-area table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+            margin-bottom: 1em;
+        }
+        .info-display-area th, .info-display-area td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .info-display-area th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .button-group {
+            display: flex;
+            gap: 10px; /* Spacing between buttons in a group */
+            margin-top: 10px; /* Spacing between button groups */
+        }
+        .button-group button {
+            flex: 1; /* Make buttons in a group share space equally */
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        #zoomControls {
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+        #zoomControls label {
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+        #zoomSlider {
+            width: calc(100% - 70px); /* Adjust width based on label */
+            vertical-align: middle;
+        }
+        .copy-button { /* Style for the new copy button */
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            padding: 5px 8px;
+            font-size: 0.8em;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0.7;
+            transition: opacity 0.2s, background-color 0.2s;
+            width: auto; /* Override general button width */
+        }
+        .copy-button:hover {
+            opacity: 1;
+            background-color: #545b62; /* Darken on hover */
+        }
+    </style>
+</head>
+<body>
+    <div id="settingsView" class="container">
+        <h1>設定</h1>
+        <!-- API Key input removed -->
+        <div>
+            <label for="targetLanguage" data-i18n="languageLabel">目標語言:</label>
+            <select id="targetLanguage">
+                <option value="zh-TW">繁體中文 (台灣)</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+            </select>
+        </div>
+        <button id="startButton" data-i18n="startButton">開始使用</button>
+        <button id="addToHomeScreenButton" class="secondary" data-i18n="addToHomeScreenButton" style="margin-top: 10px;">新增至主畫面</button>
+    </div>
+
+    <div id="appView" class="container hidden">
+        <h1 data-i18n="appTitle">圖像辨識</h1>
+        <div id="cameraView">
+            <video id="videoPreview" autoplay playsinline></video>
+            <div id="zoomControls" class="hidden">
+                <label for="zoomSlider" data-i18n="zoomLabel">縮放:</label>
+                <input type="range" id="zoomSlider" min="1" max="1" step="0.1" value="1">
+            </div>
+            <div class="button-group" style="margin-bottom: 10px;">
+                <button id="captureButton" data-i18n="captureButton">拍攝</button>
+                <button id="uploadButton" data-i18n="uploadButtonLabel">從檔案選擇</button>
+            </div>
+            <input type="file" id="imageUploadInput" class="hidden" accept="image/*">
+            <canvas id="canvas" class="hidden"></canvas>
+        </div>
+
+        <div id="controlsAfterCapture" class="hidden">
+            <img id="capturedImage" alt="Captured Image">
+
+            <p id="promptHelper" data-i18n="promptHelperText">已拍攝照片。點擊下方按鈕進行描述。</p>
+            <div class="button-group">
+                <button id="describeButton" data-i18n="describeButton">這是什麼？</button>
+                <button id="menuModeButton" data-i18n="menuModeButton">翻譯菜單</button>
+            </div>
+            <div class="button-group">
+                <button id="recaptureButton" class="secondary" data-i18n="recaptureButton">重新拍攝</button>
+                <button id="downloadImageButton" class="secondary" data-i18n="downloadImageButtonLabel">下載圖片</button>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="loader hidden"></div>
+        <div id="resultArea" class="info-display-area" data-i18n-placeholder="resultPlaceholder">辨識結果將顯示於此
+            <button class="copy-button" data-clipboard-target-id="resultArea" title="複製內容" style="display:none;">複製</button>
+        </div>
+
+        <button id="tellMeMoreButton" class="secondary hidden" data-i18n="tellMeMoreButtonLabel" style="margin-top: 15px;">告訴我更多</button>
+        <div id="moreInfoLoadingIndicator" class="loader hidden"></div>
+        <div id="moreInfoArea" class="info-display-area hidden" data-i18n-placeholder="moreInfoPlaceholder" style="margin-top:10px;">更多資訊將顯示於此
+            <button class="copy-button" data-clipboard-target-id="moreInfoArea" title="複製內容" style="display:none;">複製</button>
+        </div>
+
+        <button id="backToSettings" class="secondary" data-i18n="backToSettingsButton" style="margin-top: 20px;">返回設定</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        const settingsView = document.getElementById('settingsView');
+        const appView = document.getElementById('appView');
+        // apiKeyInput removed
+        const targetLanguageSelect = document.getElementById('targetLanguage');
+        const startButton = document.getElementById('startButton'); // Renamed from saveSettingsButton
+        const addToHomeScreenButton = document.getElementById('addToHomeScreenButton');
+
+        const cameraViewDiv = document.getElementById('cameraView');
+        const videoPreview = document.getElementById('videoPreview');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('captureButton');
+        const uploadButton = document.getElementById('uploadButton');
+        const imageUploadInput = document.getElementById('imageUploadInput');
+        const zoomControls = document.getElementById('zoomControls');
+        const zoomSlider = document.getElementById('zoomSlider');
+
+        const capturedImage = document.getElementById('capturedImage');
+        const controlsAfterCapture = document.getElementById('controlsAfterCapture');
+        const describeButton = document.getElementById('describeButton');
+        const menuModeButton = document.getElementById('menuModeButton');
+        const recaptureButton = document.getElementById('recaptureButton');
+        const downloadImageButton = document.getElementById('downloadImageButton');
+
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultArea = document.getElementById('resultArea');
+        const backToSettingsButton = document.getElementById('backToSettings');
+        const promptHelper = document.getElementById('promptHelper');
+
+        const tellMeMoreButton = document.getElementById('tellMeMoreButton');
+        const moreInfoLoadingIndicator = document.getElementById('moreInfoLoadingIndicator');
+        const moreInfoArea = document.getElementById('moreInfoArea');
+
+        let stream;
+        let videoTrack;
+        let currentApiKey = 'AIzaSyC2l7mrzCMYcZ33pAOldgVbBiCxGvBuizc'; // API Key hardcoded
+        let currentTargetLanguage = 'zh-TW';
+        let currentRequestMode = 'describe';
+        let deferredInstallPrompt = null;
+
+        const i18n = {
+            'zh-TW': {
+                // apiKeyLabel: 'API 金鑰:', // Removed
+                languageLabel: '目標語言:',
+                startButton: '開始使用', // Renamed from saveSettingsButton
+                addToHomeScreenButton: '新增至主畫面',
+                appTitle: '這是啥？AI幫你看',
+                captureButton: '拍攝',
+                uploadButtonLabel: '從檔案選擇',
+                zoomLabel: '縮放:',
+                describeButton: '這是什麼？',
+                menuModeButton: '翻譯菜單',
+                recaptureButton: '重新拍攝',
+                downloadImageButtonLabel: '下載圖片',
+                resultPlaceholder: 'AI 的分析結果會顯示在這裡喔！',
+                backToSettingsButton: '返回設定',
+                // alert_apiKeyRequired: '請先輸入你的 API 金鑰啦！', // Removed
+                alert_cameraError: '哎呀，相機打不開捏: ',
+                alert_apiError: 'API 請求失敗，再試一次看看？ ',
+                alert_noImage: '要先拍張照片或上傳圖片才能分析啦！',
+                promptHelperText: '照片已準備好！點擊下方按鈕讓 AI 幫你看。',
+                apiPrompt: `這張照片裡是什麼東西？請你嚴格依照以下「回覆樣板」的格式，並使用輕鬆、口語化的台灣用語（繁體中文，即 ${currentTargetLanguage}）來回答。請根據圖片內容填寫 [方括號] 中的資訊。如果某項資訊在圖片中無法辨識，請在對應的 [方括號] 中填寫「看不太清楚耶」或「圖片裡沒有顯示喔」。如果沒有特別的品牌或型號資訊，該部分也填寫「看不太清楚耶」。
+
+**如果圖片主要內容是菜單或價目表：**
+請讓「品名」為「菜單」或「價目表」，「用途」為「提供餐點資訊與價格」，「價格」為「包含多項品項價格」。並且在「其他觀察到的資訊」中特別提醒：「這似乎是一份菜單喔！點擊『翻譯菜單』按鈕可以查看詳細翻譯與價格，或點『告訴我更多』以獲取菜單項目解說。」
+
+回覆樣板：
+這叫做「[物品的台灣口語化通稱或品名]」。
+用途（或主要成分，依圖片判斷）是「[描述用途/主要成分/特色]」。
+價格「[如果圖片中有價格請提供，若無則填寫上述提示，例如：約 NT$XXX元 或 價格未顯示喔]」。
+
+如果圖片中有清晰的品牌名稱、型號或其他重要文字，請在最後補充一行：「其他觀察到的資訊有：[品牌、型號等文字，若無則填寫 看不太清楚耶]」。
+請確保回答自然流暢，謝謝！`,
+                apiResponsePrefix: 'AI 說：\n',
+                tellMeMoreButtonLabel: '告訴我更多關於它',
+                apiPromptMoreInfo: `請針對這張圖片中的主要物品，提供比之前初步描述更詳細的補充資訊。內容可以包含（但不限於）：使用教學、料理建議（如果適用）、保養存放（如果適用）、哪裡買/取得、相關提醒。請用輕鬆口語、條理分明的台灣用語（繁體中文，即 ${currentTargetLanguage}）來介紹，讓內容更豐富實用。請使用 Markdown 格式（例如標題、列表、粗體）來讓內容更易讀，但不要使用太複雜的 Markdown 符號。`,
+                apiPromptMenuInitial: `這是一張菜單或價目表的圖片。請你擔任專業的菜單翻譯員。嚴格依照以下「回覆樣板」的格式，將圖片中所有清晰可見的品項，逐一列出其「原文」、對應到「目標語言（${currentTargetLanguage}）的道地口語化翻譯」、以及圖片中顯示的「價格」。
+- 如果某品項的原文、翻譯或價格在圖片中不清晰，請在對應欄位註明「原文不清」、「翻譯困難」或「價格未顯示」。
+- 請確保翻譯符合目標語言的餐飲習慣用語。
+- 僅列出品項、翻譯和價格，不要有其他額外描述。
+- 如果圖片內容看起來並非菜單，請直接回覆「這似乎不是一份菜單，無法進行菜單翻譯。」
+
+回覆樣板 (使用 Markdown 列表)：
+- 原文: [品項原文1], 翻譯: [品項翻譯1], 價格: [價格1]
+- 原文: [品項原文2], 翻譯: [品項翻譯2], 價格: [價格2]
+...`,
+                apiPromptMenuMoreInfo: `接續先前的菜單翻譯結果，現在請你針對這張菜單圖片中的每一個品項，如果可能的話，提供簡短的「品項解說」。
+- 解說內容可以包含：主要食材、風味特色、份量大小的猜測、或是任何你認為對點餐有幫助的補充資訊。
+- 語言請使用目標語言（${currentTargetLanguage}）的道地口語。
+- 格式請依然先列出「原文」、「翻譯」、「價格」，然後在其下方加上「解說」。
+
+回覆樣板 (使用 Markdown)：
+- 原文: [品項原文1], 翻譯: [品項翻譯1], 價格: [價格1]
+  解說: [對品項1的解說...]
+- 原文: [品項原文2], 翻譯: [品項翻譯2], 價格: [價格2]
+  解說: [對品項2的解說...]
+...
+
+如果圖片內容看起來並非菜單，或先前的翻譯結果顯示非菜單，請直接回覆「無法提供更多關於非菜單內容的解說。」`,
+                moreInfoPlaceholder: '更多詳細資訊會顯示在這裡～',
+                moreInfoPrefix: 'AI 補充說明：\n',
+                copyButtonText: '複製',
+                copiedButtonText: '已複製!',
+                copyFailedAlert: '複製失敗!',
+                noContentCopyAlert: '沒有內容可以複製。',
+                alert_addToHomeScreenManually: '您的瀏覽器可能不支援自動新增，或您已安裝/拒絕過。請嘗試透過瀏覽器選單手動「新增至主畫面」。'
+            },
+            'en': {
+                // apiKeyLabel: 'API Key:', // Removed
+                languageLabel: 'Target Language:',
+                startButton: 'Start Using', // Renamed
+                addToHomeScreenButton: 'Add to Home Screen',
+                appTitle: "What's This? AI Vision",
+                captureButton: 'Capture',
+                uploadButtonLabel: 'Upload Image',
+                zoomLabel: 'Zoom:',
+                describeButton: "What's this?",
+                menuModeButton: 'Translate Menu',
+                recaptureButton: 'Recapture',
+                downloadImageButtonLabel: 'Download Image',
+                resultPlaceholder: 'AI analysis will appear here!',
+                backToSettingsButton: 'Back to Settings',
+                // alert_apiKeyRequired: 'Please enter your API Key.', // Removed
+                alert_cameraError: 'Could not start camera: ',
+                alert_apiError: 'API request failed. Try again? ',
+                alert_noImage: 'Please capture or upload an image first!',
+                promptHelperText: 'Image ready! Click a button below for AI to analyze.',
+                apiPrompt: `What is in this picture? Please strictly follow the "Response Template" format below and use simple, clear English (i.e., ${currentTargetLanguage}). Fill in the information in [square brackets] based on the image content. If some information cannot be identified from the image, please write "Not clear" or "Not shown in image" in the corresponding [bracket]. If no specific brand or model information is available, also write "Not clear".
+
+**If the main content of the image is a menu or price list:**
+Please set the "Name" to "Menu" or "Price List", "Purpose" to "Provides meal information and prices", and "Price" to "Contains prices for multiple items". Also, in "Other observed information", specifically prompt the user: "This seems to be a menu! Click 'Translate Menu' for detailed translation and prices, or 'Tell me more' for item explanations."
+
+Response Template:
+This is called "[common name or product name]".
+Its purpose (or main ingredients, judge by image) is "[describe purpose/main ingredients/features]".
+The price is "[provide if price is visible in image, otherwise use above hints, e.g., approx. $XX or Price not shown]".
+
+If there are clear brand names, model numbers, or other important text in the image, add a line at the end: "Other observed information: [brand, model, etc., if none then write Not clear]".
+Please ensure the answer is natural and fluent. Thanks!`,
+                apiResponsePrefix: 'AI says:\n',
+                tellMeMoreButtonLabel: 'Tell me more about it',
+                apiPromptMoreInfo: `Please provide more detailed supplementary information about the main item in this picture than the initial description. Content can include (but is not limited to): usage instructions, cooking suggestions (if applicable), maintenance/storage (if applicable), where to buy/get it, relevant reminders. Please use clear, well-organized English (i.e., ${currentTargetLanguage}) to introduce, making the content richer and more practical. Use Markdown format (e.g., headings, lists, bold) for readability, but avoid overly complex Markdown.`,
+                apiPromptMenuInitial: `This is an image of a menu or price list. Act as a professional menu translator. Strictly follow the "Response Template" format below. For each clearly visible item in the image, list its "Original Text", its idiomatic translation into the "Target Language (${currentTargetLanguage})", and the "Price" shown in the image.
+- If the original text, translation, or price of an item is unclear in the image, note "Original unclear", "Translation difficult", or "Price not shown" in the respective field.
+- Ensure translations align with the target language's culinary terminology.
+- Only list items, translations, and prices, with no additional descriptions.
+- If the image content does not appear to be a menu, please respond directly with "This does not seem to be a menu; menu translation cannot be performed."
+
+Response Template (using Markdown list):
+- Original: [Original Item 1], Translation: [Translated Item 1], Price: [Price 1]
+- Original: [Original Item 2], Translation: [Translated Item 2], Price: [Price 2]
+...`,
+                apiPromptMenuMoreInfo: `Following up on the previous menu translation, now for each item in this menu image, please provide a brief "Item Explanation" if possible.
+- The explanation can include: main ingredients, flavor profile, portion size guess, or any supplementary information you deem helpful for ordering.
+- Please use idiomatic language of the target language (${currentTargetLanguage}).
+- For the format, still list "Original", "Translation", "Price", and then add "Explanation" below it.
+
+Response Template (using Markdown):
+- Original: [Original Item 1], Translation: [Translated Item 1], Price: [Price 1]
+  Explanation: [Explanation for Item 1...]
+- Original: [Original Item 2], Translation: [Translated Item 2], Price: [Price 2]
+  Explanation: [Explanation for Item 2...]
+...
+
+If the image content does not appear to be a menu, or the previous translation indicated it's not a menu, please respond directly with "Cannot provide more details for non-menu content."`,
+                moreInfoPlaceholder: 'More detailed information will appear here!',
+                moreInfoPrefix: 'AI adds:\n',
+                copyButtonText: 'Copy',
+                copiedButtonText: 'Copied!',
+                copyFailedAlert: 'Copy failed!',
+                noContentCopyAlert: 'No content to copy.',
+                alert_addToHomeScreenManually: 'Your browser may not support automatic adding, or you have already installed/declined. Please try adding to home screen manually via browser menu.'
+            },
+            'ja': {
+                // apiKeyLabel: 'APIキー:', // Removed
+                languageLabel: 'ターゲット言語:',
+                startButton: '利用開始', // Renamed
+                addToHomeScreenButton: 'ホーム画面に追加',
+                appTitle: 'これは何？AI画像認識',
+                captureButton: '撮影',
+                uploadButtonLabel: '画像をアップロード',
+                zoomLabel: 'ズーム:',
+                describeButton: 'これは何？',
+                menuModeButton: 'メニュー翻訳',
+                recaptureButton: '再撮影',
+                downloadImageButtonLabel: '画像をダウンロード',
+                resultPlaceholder: 'AIの解析結果はここに表示されます！',
+                backToSettingsButton: '設定に戻る',
+                // alert_apiKeyRequired: 'APIキーを入力してください。', // Removed
+                alert_cameraError: 'カメラを起動できませんでした: ',
+                alert_apiError: 'APIリクエストに失敗しました。もう一度試しますか？',
+                alert_noImage: 'まず画像を撮影またはアップ로드してください！',
+                promptHelperText: '画像準備完了！下のボタンをクリックしてAIに解析させてください。',
+                apiPrompt: `この写真には何が写っていますか？以下の「回答テンプレート」の形式に厳密に従い、わかりやすく口語的な日本語（${currentTargetLanguage}）で回答してください。画像の内容に基づいて[角括弧]内の情報を記入してください。画像から情報が特定できない場合は、対応する[角括弧]に「不明瞭です」または「画像に表示されていません」と記入してください。特定のブランドやモデル情報がない場合も「不明瞭です」と記入してください。
+
+**画像が主にメニューまたは価格表である場合：**
+「品名」を「メニュー」または「価格表」、「用途」を「食事情報と価格の提供」、「価格」を「複数の品目の価格を含む」としてください。さらに、「その他観察された情報」で「これはメニューのようです！「メニュー翻訳」ボタンで詳細な翻訳と価格を確認するか、「もっと詳しく教えて」で項目解説を確認できます。」とユーザーに明確に促してください。
+
+回答テンプレート：
+これは「[物品の一般的な呼称または品名]」と呼ばれます。
+用途（または主な成分、画像から判断）は「[用途/主な成分/特徴を記述]」です。
+価格は「[画像に価格が表示されていれば記入、なければ上記のヒントを使用。例：約XXX円または価格未表示です]」です。
+
+画像に明確なブランド名、モデル番号、その他の重要なテキストがある場合は、最後に一行追加してください：「その他観察された情報：[ブランド、モデルなど、なければ不明瞭です]」。
+回答は自然で流暢になるようお願いします。ありがとうございます！`,
+                apiResponsePrefix: 'AIの解析：\n',
+                tellMeMoreButtonLabel: 'もっと詳しく教えて',
+                apiPromptMoreInfo: `この画像の主要なアイテムについて、最初の説明よりも詳細な補足情報を提供してください。内容は以下を含むことができます（ただしこれらに限定されません）：使用方法、料理の提案（該当する場合）、メンテナンス/保管（該当する場合）、購入/入手場所、関連する注意点。わかりやすく整理された日本語（${currentTargetLanguage}）で紹介し、内容をより豊かで実用的なものにしてください。Markdown形式（例：見出し、リスト、太字）を使用して読みやすくしてください。ただし、複雑すぎるMarkdown記号は避けてください。`,
+                apiPromptMenuInitial: `これはメニューまたは価格表の画像です。プロのメニュー翻訳者として行動してください。以下の「回答テンプレート」の形式に厳密に従ってください。画像内の明確に見える各項目について、「原文」、「ターゲット言語（${currentTargetLanguage}）への自然な翻訳」、および画像に表示されている「価格」をリストアップしてください。
+- 項目の原文、翻訳、または価格が画像で不明確な場合は、それぞれのフィールドに「原文不明瞭」、「翻訳困難」、または「価格未表示」と記載してください。
+- 翻訳がターゲット言語の料理用語に合致するようにしてください。
+- 品目、翻訳、価格のみをリストアップし、追加の説明は不要です。
+- 画像の内容がメニューに見えない場合は、「これはメニューではないようです。メニュー翻訳は実行できません。」と直接返信してください。
+
+回答テンプレート（Markdownリスト使用）：
+- 原文: [原文1], 翻訳: [翻訳1], 価格: [価格1]
+- 原文: [原文2], 翻訳: [翻訳2], 価格: [価格2]
+...`,
+                apiPromptMenuMoreInfo: `前回のメニュー翻訳に続いて、このメニュー画像の各項目について、可能であれば簡単な「項目解説」を提供してください。
+- 解説には、主な材料、風味の特徴、量の推測、その他注文に役立つと思われる補足情報を含めることができます。
+- ターゲット言語（${currentTargetLanguage}）の自然な言葉遣いを使用してください。
+- 形式としては、「原文」、「翻訳」、「価格」をリストアップし、その下に「解説」を追加してください。
+
+回答テンプレート（Markdown使用）：
+- 原文: [原文1], 翻訳: [翻訳1], 価格: [価格1]
+  解説: [項目1の解説...]
+- 原文: [原文2], 翻訳: [翻訳2], 価格: [価格2]
+  解説: [項目2の解説...]
+...
+
+画像の内容がメニューに見えない場合、または前回の翻訳でメニューではないと示された場合は、「メニュー以外の内容に関する詳細は提供できません。」と直接返信してください。`,
+                moreInfoPlaceholder: 'さらに詳しい情報はこちらに表示されます！',
+                moreInfoPrefix: 'AIの補足説明：\n',
+                copyButtonText: 'コピー',
+                copiedButtonText: 'コピー完了!',
+                copyFailedAlert: 'コピー失敗!',
+                noContentCopyAlert: 'コピーする内容がありません。',
+                alert_addToHomeScreenManually: 'お使いのブラウザは自動追加をサポートしていないか、既にインストール/拒否されている可能性があります。ブラウザのメニューから手動で「ホーム画面に追加」をお試しください。'
+            },
+            'ko': {
+                // apiKeyLabel: 'API 키:', // Removed
+                languageLabel: '대상 언어:',
+                startButton: '사용 시작', // Renamed
+                addToHomeScreenButton: '홈 화면에 추가',
+                appTitle: '이게 뭐지? AI 이미지 분석',
+                captureButton: '촬영',
+                uploadButtonLabel: '이미지 업로드',
+                zoomLabel: '줌:',
+                describeButton: '이게 뭐예요?',
+                menuModeButton: '메뉴 번역',
+                recaptureButton: '다시 촬영',
+                downloadImageButtonLabel: '이미지 다운로드',
+                resultPlaceholder: 'AI 분석 결과가 여기에 표시됩니다!',
+                backToSettingsButton: '설정으로 돌아가기',
+                // alert_apiKeyRequired: 'API 키를 입력해주세요.', // Removed
+                alert_cameraError: '카메라를 시작할 수 없습니다: ',
+                alert_apiError: 'API 요청에 실패했습니다. 다시 시도하시겠습니까? ',
+                alert_noImage: '먼저 이미지를 촬영하거나 업로드해주세요!',
+                promptHelperText: '이미지 준비 완료! AI 분석을 위해 아래 버튼을 클릭하세요.',
+                apiPrompt: `이 사진에 무엇이 있습니까? 아래 "응답 템플릿" 형식을 엄격히 따르고 간단하고 명확한 한국어(${currentTargetLanguage})로 답변하십시오. 이미지 내용을 기반으로 [대괄호] 안의 정보를 입력하십시오. 이미지에서 일부 정보를 식별할 수 없는 경우 해당 [대괄호]에 "명확하지 않음" 또는 "이미지에 표시되지 않음"이라고 작성하십시오. 특정 브랜드나 모델 정보가 없는 경우에도 "명확하지 않음"이라고 작성하십시오.
+
+**이미지의 주요 내용이 메뉴 또는 가격표인 경우:**
+"품명"을 "메뉴" 또는 "가격표"로, "용도"를 "식사 정보 및 가격 제공"으로, "가격"을 "여러 항목의 가격 포함"으로 설정하십시오. 또한, "기타 관찰된 정보"에 "이것은 메뉴인 것 같습니다! 자세한 번역 및 가격은 '메뉴 번역' 버튼을, 항목 설명은 '자세히 알려줘'를 클릭하십시오."라고 사용자에게 명확하게 안내하십시오.
+
+응답 템플릿:
+이것은 "[일반적인 이름 또는 제품 이름]"이라고 합니다.
+용도(또는 주요 성분, 이미지로 판단)는 "[용도/주요 성분/특징 설명]"입니다.
+가격은 "[이미지에 가격이 표시된 경우 제공, 그렇지 않은 경우 위 힌트 사용, 예: 약 XXX원 또는 가격이 표시되지 않음]"입니다.
+
+이미지에 명확한 브랜드 이름, 모델 번호 또는 기타 중요한 텍스트가 있는 경우 마지막에 한 줄을 추가하십시오: "기타 관찰된 정보: [브랜드, 모델 등, 없는 경우 명확하지 않음]".
+답변이 자연스럽고 유창하도록 해주십시오. 감사합니다!`,
+                apiResponsePrefix: 'AI 설명：\n',
+                tellMeMoreButtonLabel: '자세히 알려줘',
+                apiPromptMoreInfo: `사진 속 주요 품목에 대해 이전의 초기 설명보다 더 자세한 보충 정보를 제공하십시오. 내용은 다음을 포함할 수 있지만 이에 국한되지는 않습니다: 사용 지침, 요리 제안 (해당하는 경우), 유지 관리/보관 (해당하는 경우), 구입처/입수처, 관련 주의사항. 내용을 더 풍부하고 실용적으로 만들기 위해 간결하고 체계적인 한국어(${currentTargetLanguage})로 소개하십시오. 내용을 더 쉽게 읽을 수 있도록 Markdown 형식(예: 제목, 목록, 굵은 텍스트)을 사용하십시오. 그러나 너무 복잡한 Markdown 기호는 피하십시오.`,
+                apiPromptMenuInitial: `이것은 메뉴 또는 가격표 이미지입니다. 전문 메뉴 번역가 역할을 해주십시오. 아래 "응답 템플릿" 형식을 엄격히 따르십시오. 이미지에서 명확하게 보이는 모든 항목의 "원문", "대상 언어(${currentTargetLanguage})로의 자연스러운 번역", 그리고 이미지에 표시된 "가격"을 나열하십시오.
+- 항목의 원문, 번역 또는 가격이 이미지에서 불분명한 경우, 해당 필드에 "원문 불분명", "번역 어려움" 또는 "가격 표시 없음"으로 기재하십시오.
+- 번역이 대상 언어의 요리 용어와 일치하도록 하십시오.
+- 항목, 번역, 가격만 나열하고 추가 설명은 하지 마십시오.
+- 이미지 내용이 메뉴로 보이지 않으면 "이것은 메뉴가 아닌 것 같습니다. 메뉴 번역을 수행할 수 없습니다."라고 직접 응답하십시오.
+
+응답 템플릿 (Markdown 목록 사용):
+- 원문: [원문 항목 1], 번역: [번역된 항목 1], 가격: [가격 1]
+- 원문: [원문 항목 2], 번역: [번역된 항목 2], 가격: [가격 2]
+...`,
+                apiPromptMenuMoreInfo: `이전 메뉴 번역에 이어, 이 메뉴 이미지의 각 항목에 대해 가능하다면 간단한 "항목 설명"을 제공하십시오.
+- 설명에는 주요 재료, 풍미 특징, 양 추측 또는 주문에 도움이 될 만한 보충 정보가 포함될 수 있습니다.
+- 대상 언어(${currentTargetLanguage})의 자연스러운 표현을 사용하십시오。
+- 格式請依然先列出「原文」、「翻譯」、「價格」，然後在其下方加上「解說」。
+
+回覆樣板 (使用 Markdown)：
+- 原文: [品項原文1], 翻譯: [品項翻譯1], 價格: [價格1]
+  解說: [對品項1的解說...]
+- 原文: [品項原文2], 翻譯: [品項翻譯2], 價格: [價格2]
+  解說: [對品項2的解說...]
+...
+
+如果圖片內容看起來並非菜單，或先前的翻譯結果顯示非菜單，請直接回覆「無法提供更多關於非菜單內容的解說。」`,
+                moreInfoPlaceholder: '더 자세한 정보가 여기에 표시됩니다!',
+                moreInfoPrefix: 'AI 추가 설명：\n',
+                copyButtonText: '복사',
+                copiedButtonText: '복사됨!',
+                copyFailedAlert: '복사 실패!',
+                noContentCopyAlert: '복사할 내용이 없습니다.',
+                alert_addToHomeScreenManually: '브라우저가 자동 추가를 지원하지 않거나 이미 설치/거부했을 수 있습니다. 브라우저 메뉴를 통해 수동으로 홈 화면에 추가해 보세요.'
+            }
+        };
+
+        function getProcessedPrompt(promptKey) {
+            let promptText = i18n[currentTargetLanguage][promptKey];
+            if (promptText && typeof promptText === 'string') {
+                promptText = promptText.replace(/\$\{currentTargetLanguage\}/g, currentTargetLanguage);
+            }
+            return promptText;
+        }
+
+        function updateCopyButtonVisibility(textAreaElement, placeholderTextKey) {
+            const copyButton = textAreaElement.querySelector('.copy-button');
+            if (!copyButton) return;
+
+            copyButton.textContent = i18n[currentTargetLanguage].copyButtonText || '複製';
+
+
+            const placeholder = i18n[currentTargetLanguage][placeholderTextKey];
+            const currentPrefix = textAreaElement.id === 'resultArea' ? i18n[currentTargetLanguage].apiResponsePrefix : (textAreaElement.id === 'moreInfoArea' ? i18n[currentTargetLanguage].moreInfoPrefix : "");
+
+            const clone = textAreaElement.cloneNode(true);
+            const buttonInClone = clone.querySelector('.copy-button');
+            if (buttonInClone) buttonInClone.remove();
+
+            const htmlContent = clone.innerHTML.trim();
+            const textContent = clone.innerText.trim();
+
+            const justPrefix = currentPrefix && htmlContent === currentPrefix.trim().replace(/\n/g, '<br>').replace(/\n/g, '');
+            const isPlaceholder = htmlContent === placeholder.trim();
+
+            if (textContent && !isPlaceholder && !justPrefix && textContent !== currentPrefix.trim()) {
+                copyButton.style.display = 'inline-block';
+            } else {
+                copyButton.style.display = 'none';
+            }
+        }
+
+
+        function updateUIStrings(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang] && i18n[lang][key]) {
+                    el.textContent = i18n[lang][key];
+                }
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (i18n[lang] && i18n[lang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = i18n[lang][key];
+                    } else {
+                        const currentContentClone = el.cloneNode(true);
+                        const copyBtnInClone = currentContentClone.querySelector('.copy-button');
+                        if (copyBtnInClone) copyBtnInClone.remove();
+                        const currentActualContent = currentContentClone.innerHTML.trim();
+
+                        const placeholderValues = Object.values(i18n).map(translations => translations[key]).filter(Boolean);
+                        let isCurrentlyPlaceholder = false;
+                        for(const pVal of placeholderValues) {
+                            if (currentActualContent === pVal || currentActualContent === "") {
+                                isCurrentlyPlaceholder = true;
+                                break;
+                            }
+                        }
+                        const currentPrefix = el.id === 'resultArea' ? i18n[lang].apiResponsePrefix : (el.id === 'moreInfoArea' ? i18n[lang].moreInfoPrefix : "");
+                        if (currentActualContent === currentPrefix.trim().replace(/\n/g, '<br>').replace(/\n/g, '')) {
+                            isCurrentlyPlaceholder = true;
+                        }
+
+
+                        if (isCurrentlyPlaceholder) {
+                           el.innerHTML = i18n[lang][key];
+                           if (!el.querySelector('.copy-button') && (el.id === 'resultArea' || el.id === 'moreInfoArea')) {
+                               const newCopyButton = document.createElement('button');
+                               newCopyButton.className = 'copy-button';
+                               newCopyButton.setAttribute('data-clipboard-target-id', el.id);
+                               newCopyButton.title = i18n[lang].copyButtonText || '複製內容';
+                               newCopyButton.style.display = 'none';
+                               newCopyButton.textContent = i18n[lang].copyButtonText || '複製';
+                               el.appendChild(newCopyButton);
+                           }
+                        }
+                    }
+                }
+            });
+            currentTargetLanguage = lang;
+            localStorage.setItem('targetLanguage', lang);
+            if (!controlsAfterCapture.classList.contains('hidden')) {
+                promptHelper.textContent = i18n[currentTargetLanguage].promptHelperText;
+            }
+            const mainTitle = document.querySelector('h1[data-i18n="appTitle"]');
+             if (mainTitle && i18n[lang] && i18n[lang].appTitle) mainTitle.textContent = i18n[lang].appTitle;
+
+            [describeButton, menuModeButton, recaptureButton, downloadImageButton, tellMeMoreButton, captureButton, uploadButton, startButton, backToSettingsButton, addToHomeScreenButton].forEach(btn => {
+                if (btn) {
+                    const i18nKey = btn.dataset.i18n;
+                    if (i18nKey && i18n[lang] && i18n[lang][i18nKey]) {
+                        btn.textContent = i18n[lang][i18nKey];
+                    }
+                }
+            });
+             const zoomLabelEl = document.querySelector('label[for="zoomSlider"]');
+             if (zoomLabelEl && i18n[lang] && i18n[lang].zoomLabel) {
+                 zoomLabelEl.textContent = i18n[lang].zoomLabel;
+             }
+            if (document.getElementById('resultArea')) {
+                updateCopyButtonVisibility(document.getElementById('resultArea'), 'resultPlaceholder');
+            }
+            if (document.getElementById('moreInfoArea')) {
+                updateCopyButtonVisibility(document.getElementById('moreInfoArea'), 'moreInfoPlaceholder');
+            }
+        }
+
+        function loadSettings() {
+            // API Key is hardcoded, no need to load from localStorage
+            const savedLanguage = localStorage.getItem('targetLanguage');
+
+            if (savedLanguage) {
+                targetLanguageSelect.value = savedLanguage;
+            } else {
+                targetLanguageSelect.value = 'zh-TW';
+            }
+            updateUIStrings(targetLanguageSelect.value); // This will set currentTargetLanguage
+        }
+
+        function stopCameraStream() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                videoTrack = null;
+            }
+            zoomControls.classList.add('hidden');
+        }
+
+        async function startCamera() {
+            stopCameraStream();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                videoPreview.srcObject = stream;
+                videoPreview.classList.remove('hidden');
+                cameraViewDiv.classList.remove('hidden');
+
+                captureButton.classList.remove('hidden');
+                uploadButton.classList.remove('hidden');
+
+                capturedImage.style.display = 'none';
+                controlsAfterCapture.classList.add('hidden');
+
+                resultArea.innerHTML = i18n[currentTargetLanguage].resultPlaceholder + `<button class="copy-button" data-clipboard-target-id="resultArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                updateCopyButtonVisibility(resultArea, 'resultPlaceholder');
+                tellMeMoreButton.classList.add('hidden');
+                moreInfoArea.classList.add('hidden');
+                moreInfoArea.innerHTML = i18n[currentTargetLanguage].moreInfoPlaceholder + `<button class="copy-button" data-clipboard-target-id="moreInfoArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                updateCopyButtonVisibility(moreInfoArea, 'moreInfoPlaceholder');
+
+
+                videoTrack = stream.getVideoTracks()[0];
+                const capabilities = videoTrack.getCapabilities();
+
+                if (capabilities.zoom) {
+                    zoomSlider.min = capabilities.zoom.min;
+                    zoomSlider.max = capabilities.zoom.max;
+                    zoomSlider.step = capabilities.zoom.step;
+                    let currentZoom = videoTrack.getSettings().zoom || parseFloat(zoomSlider.value);
+                    if (currentZoom < capabilities.zoom.min) currentZoom = capabilities.zoom.min;
+                    if (currentZoom > capabilities.zoom.max) currentZoom = capabilities.zoom.max;
+                    zoomSlider.value = currentZoom;
+                    zoomControls.classList.remove('hidden');
+                } else {
+                    zoomControls.classList.add('hidden');
+                }
+
+                if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+                    videoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+                        .then(() => console.log("Continuous focus enabled."))
+                        .catch(e => console.warn("Could not enable continuous focus:", e));
+                }
+
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                resultArea.innerHTML = i18n[currentTargetLanguage].alert_cameraError + err.message + `<button class="copy-button" data-clipboard-target-id="resultArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                updateCopyButtonVisibility(resultArea, 'resultPlaceholder');
+                cameraViewDiv.classList.add('hidden');
+                zoomControls.classList.add('hidden');
+            }
+        }
+
+        startButton.addEventListener('click', () => {
+            // API Key is already set and not taken from input
+            localStorage.setItem('targetLanguage', targetLanguageSelect.value);
+            // updateUIStrings(targetLanguageSelect.value); // Already handled by targetLanguageSelect change event or loadSettings
+
+            settingsView.classList.add('hidden');
+            appView.classList.remove('hidden');
+            startCamera();
+        });
+
+        targetLanguageSelect.addEventListener('change', (event) => {
+            updateUIStrings(event.target.value);
+        });
+
+        zoomSlider.addEventListener('input', () => {
+            if (videoTrack && videoTrack.applyConstraints) {
+                videoTrack.applyConstraints({ advanced: [{ zoom: parseFloat(zoomSlider.value) }] })
+                    .catch(e => console.error("Zoom error:", e));
+            }
+        });
+
+        videoPreview.addEventListener('click', () => {
+            if (videoTrack && videoTrack.applyConstraints && videoTrack.getCapabilities().focusMode) {
+                const focusModes = videoTrack.getCapabilities().focusMode;
+                if (focusModes.includes('single-shot')) {
+                    videoTrack.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] })
+                        .then(() => console.log("Single-shot focus triggered."))
+                        .catch(e => console.warn("Single-shot focus error:", e));
+                } else if (focusModes.includes('continuous')) {
+                     videoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+                        .catch(e => console.warn("Re-applying continuous focus error:", e));
+                }
+            }
+        });
+
+        function showImageAndControls(imageDataUrl) {
+            capturedImage.src = imageDataUrl;
+            capturedImage.style.display = 'block';
+
+            videoPreview.classList.add('hidden');
+            zoomControls.classList.add('hidden');
+            cameraViewDiv.classList.add('hidden');
+
+            controlsAfterCapture.classList.remove('hidden');
+            promptHelper.textContent = i18n[currentTargetLanguage].promptHelperText;
+
+            resultArea.innerHTML = i18n[currentTargetLanguage].resultPlaceholder + `<button class="copy-button" data-clipboard-target-id="resultArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(resultArea, 'resultPlaceholder');
+            tellMeMoreButton.classList.add('hidden');
+            moreInfoArea.classList.add('hidden');
+            moreInfoArea.innerHTML = i18n[currentTargetLanguage].moreInfoPlaceholder + `<button class="copy-button" data-clipboard-target-id="moreInfoArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(moreInfoArea, 'moreInfoPlaceholder');
+
+            stopCameraStream();
+        }
+
+        captureButton.addEventListener('click', () => {
+            if (!stream || !videoPreview.videoWidth) {
+                alert(i18n[currentTargetLanguage].alert_cameraError + "Camera not ready.");
+                return;
+            }
+            canvas.width = videoPreview.videoWidth;
+            canvas.height = videoPreview.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
+
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            showImageAndControls(imageDataUrl);
+        });
+
+        uploadButton.addEventListener('click', () => {
+            imageUploadInput.click();
+        });
+
+        imageUploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    showImageAndControls(e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+            imageUploadInput.value = null;
+        });
+
+        recaptureButton.addEventListener('click', () => {
+            startCamera();
+            capturedImage.style.display = 'none';
+            controlsAfterCapture.classList.add('hidden');
+
+            resultArea.innerHTML = i18n[currentTargetLanguage].resultPlaceholder + `<button class="copy-button" data-clipboard-target-id="resultArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(resultArea, 'resultPlaceholder');
+            tellMeMoreButton.classList.add('hidden');
+            moreInfoArea.classList.add('hidden');
+            moreInfoArea.innerHTML = i18n[currentTargetLanguage].moreInfoPlaceholder + `<button class="copy-button" data-clipboard-target-id="moreInfoArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(moreInfoArea, 'moreInfoPlaceholder');
+        });
+
+        downloadImageButton.addEventListener('click', () => {
+            if (capturedImage.src && capturedImage.style.display !== 'none' && capturedImage.src !== "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=") {
+                const link = document.createElement('a');
+                link.href = capturedImage.src;
+                const timestamp = new Date().toISOString().replace(/[:.-]/g, '');
+                link.download = `ai_image_${timestamp}.jpeg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert(i18n[currentTargetLanguage].alert_noImage);
+            }
+        });
+
+        async function callGeminiAPI(promptText, base64ImageData, resultDisplayElement, loadingElement, responsePrefixKey, placeholderTextKey) {
+            if (!base64ImageData) {
+                alert(i18n[currentTargetLanguage].alert_noImage);
+                return;
+            }
+            // API Key check removed as it's hardcoded
+            // if (!currentApiKey) {
+            //     alert(i18n[currentTargetLanguage].alert_apiKeyRequired);
+            //     return;
+            // }
+
+            const responsePrefix = i18n[currentTargetLanguage][responsePrefixKey];
+            const placeholderText = i18n[currentTargetLanguage][placeholderTextKey];
+
+            loadingElement.classList.remove('hidden');
+            resultDisplayElement.innerHTML = responsePrefix + `<button class="copy-button" data-clipboard-target-id="${resultDisplayElement.id}" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(resultDisplayElement, placeholderTextKey);
+            resultDisplayElement.classList.remove('hidden');
+
+            if (resultDisplayElement === resultArea) {
+                 tellMeMoreButton.classList.add('hidden');
+            }
+
+            const STREAM_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:streamGenerateContent?key=${currentApiKey}&alt=sse`;
+
+            const requestBody = {
+                contents: [{
+                    parts: [
+                        { text: promptText },
+                        {
+                            inline_data: {
+                                mime_type: "image/jpeg",
+                                data: base64ImageData
+                            }
+                        }
+                    ]
+                }],
+                 generationConfig: {
+                   temperature: 0,
+                   maxOutputTokens: 4096,
+                   thinkingConfig: { // MODIFICATION: Added thinkingConfig
+                       thinkingBudget: 0 // MODIFICATION: Set thinkingBudget to 0
+                   }
+                 }
+            };
+
+            let accumulatedText = "";
+            let successStreaming = false;
+
+            try {
+                const response = await fetch(STREAM_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    let errorJsonMessage = "";
+                    try {
+                        const errorData = await response.json();
+                        errorJsonMessage = errorData.error?.message || 'Unknown API error after non-ok response';
+                    } catch (e) {
+                        errorJsonMessage = response.statusText || 'Failed to get error details';
+                    }
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorJsonMessage}`);
+                }
+
+                if (!response.body) {
+                    throw new Error("Response body is null, streaming not possible.");
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let lineBuffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        if (lineBuffer.trim().startsWith('data:')) {
+                             try {
+                                const jsonString = lineBuffer.substring(lineBuffer.indexOf('{'));
+                                const jsonData = JSON.parse(jsonString);
+                                if (jsonData.candidates && jsonData.candidates[0].content && jsonData.candidates[0].content.parts && jsonData.candidates[0].content.parts[0].text) {
+                                    const textChunk = jsonData.candidates[0].content.parts[0].text;
+                                    accumulatedText += textChunk;
+                                    resultDisplayElement.innerHTML = responsePrefix + marked.parse(accumulatedText) + `<button class="copy-button" data-clipboard-target-id="${resultDisplayElement.id}" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                                    updateCopyButtonVisibility(resultDisplayElement, placeholderTextKey);
+                                    successStreaming = true;
+                                }
+                            } catch (e) {
+                                console.warn("Error parsing final buffered JSON chunk:", e, lineBuffer);
+                            }
+                        }
+                        break;
+                    }
+
+                    lineBuffer += decoder.decode(value, { stream: true });
+                    let eolIndex;
+                    while ((eolIndex = lineBuffer.indexOf('\n')) >= 0) {
+                        const line = lineBuffer.substring(0, eolIndex).trim();
+                        lineBuffer = lineBuffer.substring(eolIndex + 1);
+
+                        if (line.startsWith('data:')) {
+                            try {
+                                const jsonString = line.substring(line.indexOf('{'));
+                                const jsonData = JSON.parse(jsonString);
+
+                                if (jsonData.candidates && jsonData.candidates[0].content && jsonData.candidates[0].content.parts && jsonData.candidates[0].content.parts[0].text) {
+                                    const textChunk = jsonData.candidates[0].content.parts[0].text;
+                                    accumulatedText += textChunk;
+                                    resultDisplayElement.innerHTML = responsePrefix + marked.parse(accumulatedText) + `<button class="copy-button" data-clipboard-target-id="${resultDisplayElement.id}" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                                    updateCopyButtonVisibility(resultDisplayElement, placeholderTextKey);
+                                    resultDisplayElement.scrollTop = resultDisplayElement.scrollHeight;
+                                    successStreaming = true;
+                                } else if (jsonData.promptFeedback && jsonData.promptFeedback.blockReason) {
+                                    let blockMessage = `${i18n[currentTargetLanguage].alert_apiError} Blocked by API. Reason: ${jsonData.promptFeedback.blockReason}`;
+                                    if (jsonData.promptFeedback.safetyRatings) {
+                                        blockMessage += `\nDetails: ${jsonData.promptFeedback.safetyRatings.map(r => `${r.category} was ${r.probability}`).join(', ')}`;
+                                    }
+                                    accumulatedText += `\n\n**API Error:**\n${blockMessage}\n\n`;
+                                    resultDisplayElement.innerHTML = responsePrefix + marked.parse(accumulatedText) + `<button class="copy-button" data-clipboard-target-id="${resultDisplayElement.id}" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                                    updateCopyButtonVisibility(resultDisplayElement, placeholderTextKey);
+                                    if (resultDisplayElement === resultArea) tellMeMoreButton.classList.add('hidden');
+                                }
+                            } catch (e) {
+                                console.warn('Error parsing JSON chunk from stream:', e, "Line was: ", line);
+                            }
+                        }
+                    }
+                }
+
+                if (resultDisplayElement === resultArea && successStreaming) {
+                    const isNotMenuResponse = accumulatedText.includes("不是一份菜單") || accumulatedText.includes("not a menu");
+                    const isBlockedResponse = accumulatedText.includes("Blocked by API");
+
+                    if (!isNotMenuResponse && !isBlockedResponse) {
+                         tellMeMoreButton.classList.remove('hidden');
+                    } else {
+                         tellMeMoreButton.classList.add('hidden');
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error calling Gemini API (streaming):", error);
+                const errorHtml = marked.parse(i18n[currentTargetLanguage].alert_apiError + error.message);
+                if (accumulatedText.trim() === "") {
+                    resultDisplayElement.innerHTML = responsePrefix + errorHtml + `<button class="copy-button" data-clipboard-target-id="${resultDisplayElement.id}" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                } else {
+                    resultDisplayElement.innerHTML += `<hr>${errorHtml}`;
+                }
+                updateCopyButtonVisibility(resultDisplayElement, placeholderTextKey);
+
+                if (resultDisplayElement === resultArea) tellMeMoreButton.classList.add('hidden');
+                successStreaming = false;
+            } finally {
+                loadingElement.classList.add('hidden');
+                if (!successStreaming && (resultDisplayElement.innerText.trim() === responsePrefix.trim() || resultDisplayElement.innerText.trim() === '')) {
+                     resultDisplayElement.innerHTML = placeholderText + `<button class="copy-button" data-clipboard-target-id="${resultDisplayElement.id}" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                } else if (successStreaming && accumulatedText.trim() === '') {
+                    resultDisplayElement.innerHTML = responsePrefix + i18n[currentTargetLanguage].alert_apiError + "AI did not provide any text output." + `<button class="copy-button" data-clipboard-target-id="${resultDisplayElement.id}" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+                }
+                updateCopyButtonVisibility(resultDisplayElement, placeholderTextKey);
+            }
+        }
+
+
+        describeButton.addEventListener('click', async () => {
+            currentRequestMode = 'describe';
+            const base64ImageData = capturedImage.src.split(',')[1];
+            tellMeMoreButton.classList.add('hidden');
+            moreInfoArea.classList.add('hidden');
+            moreInfoArea.innerHTML = i18n[currentTargetLanguage].moreInfoPlaceholder + `<button class="copy-button" data-clipboard-target-id="moreInfoArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(moreInfoArea, 'moreInfoPlaceholder');
+
+            await callGeminiAPI(
+                getProcessedPrompt('apiPrompt'),
+                base64ImageData,
+                resultArea,
+                loadingIndicator,
+                'apiResponsePrefix',
+                'resultPlaceholder'
+            );
+        });
+
+        menuModeButton.addEventListener('click', async () => {
+            currentRequestMode = 'menu';
+            const base64ImageData = capturedImage.src.split(',')[1];
+            tellMeMoreButton.classList.add('hidden');
+            moreInfoArea.classList.add('hidden');
+            moreInfoArea.innerHTML = i18n[currentTargetLanguage].moreInfoPlaceholder + `<button class="copy-button" data-clipboard-target-id="moreInfoArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(moreInfoArea, 'moreInfoPlaceholder');
+
+            await callGeminiAPI(
+                getProcessedPrompt('apiPromptMenuInitial'),
+                base64ImageData,
+                resultArea,
+                loadingIndicator,
+                'apiResponsePrefix',
+                'resultPlaceholder'
+            );
+        });
+
+        tellMeMoreButton.addEventListener('click', async () => {
+            const base64ImageData = capturedImage.src.split(',')[1];
+            moreInfoArea.classList.remove('hidden');
+            moreInfoArea.innerHTML = i18n[currentTargetLanguage].moreInfoPlaceholder + `<button class="copy-button" data-clipboard-target-id="moreInfoArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(moreInfoArea, 'moreInfoPlaceholder');
+
+
+            let moreInfoPromptKey = currentRequestMode === 'menu' ? 'apiPromptMenuMoreInfo' : 'apiPromptMoreInfo';
+
+            await callGeminiAPI(
+                getProcessedPrompt(moreInfoPromptKey),
+                base64ImageData,
+                moreInfoArea,
+                moreInfoLoadingIndicator,
+                'moreInfoPrefix',
+                'moreInfoPlaceholder'
+            );
+        });
+
+        backToSettingsButton.addEventListener('click', () => {
+            stopCameraStream();
+            appView.classList.add('hidden');
+            settingsView.classList.remove('hidden');
+
+            capturedImage.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+            capturedImage.style.display = 'none';
+            controlsAfterCapture.classList.add('hidden');
+
+            resultArea.innerHTML = i18n[currentTargetLanguage].resultPlaceholder + `<button class="copy-button" data-clipboard-target-id="resultArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(resultArea, 'resultPlaceholder');
+            tellMeMoreButton.classList.add('hidden');
+            moreInfoArea.classList.add('hidden');
+            moreInfoArea.innerHTML = i18n[currentTargetLanguage].moreInfoPlaceholder + `<button class="copy-button" data-clipboard-target-id="moreInfoArea" title="${i18n[currentTargetLanguage].copyButtonText || '複製內容'}" style="display:none;">${i18n[currentTargetLanguage].copyButtonText || '複製'}</button>`;
+            updateCopyButtonVisibility(moreInfoArea, 'moreInfoPlaceholder');
+
+            cameraViewDiv.classList.remove('hidden');
+            videoPreview.classList.remove('hidden');
+            captureButton.classList.remove('hidden');
+            uploadButton.classList.remove('hidden');
+            zoomControls.classList.add('hidden');
+        });
+
+        // Event listener for "Add to Home Screen" button
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
+            deferredInstallPrompt = event;
+            // You can optionally show a custom UI element here to indicate installability,
+            // or modify the existing addToHomeScreenButton visibility.
+            // For now, it's always visible on the settings page as per current UI.
+            console.log('`beforeinstallprompt` event was fired.');
+            // This is where you might change addToHomeScreenButton.style.display if it was initially 'none'
+            // addToHomeScreenButton.style.display = 'block'; // Or 'inline-block'
+        });
+
+        // Event listener for when the app is installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed!');
+            // You might want to hide the "Add to Home Screen" button after installation
+            if (addToHomeScreenButton) {
+                addToHomeScreenButton.style.display = 'none';
+            }
+        });
+
+        addToHomeScreenButton.addEventListener('click', async () => {
+            if (deferredInstallPrompt) {
+                console.log('Triggering A2HS prompt...');
+                deferredInstallPrompt.prompt(); // Show the install prompt
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                console.log(`User response to the A2HS prompt: ${outcome}`);
+                if (outcome === 'accepted') {
+                    console.log('User accepted the A2HS prompt');
+                    // The 'appinstalled' event listener will handle hiding the button
+                } else {
+                    console.log('User dismissed the A2HS prompt');
+                    // If dismissed, the button might stay visible for a retry, or you could hide it.
+                    // Based on the current alert logic, it implies keeping it visible so the alert path is taken next.
+                }
+                deferredInstallPrompt = null; // The prompt can only be used once
+            } else {
+                // deferredInstallPrompt is null, meaning:
+                // 1. The PWA is already installed.
+                // 2. The user has previously dismissed the prompt and the browser decided not to show it again yet.
+                // 3. The PWA criteria (manifest, service worker, HTTPS, engagement heuristic) are not met.
+                // 4. The browser doesn't support the A2HS API.
+                alert(i18n[currentTargetLanguage].alert_addToHomeScreenManually || '此瀏覽器可能不支援自動新增，或您已安裝/拒絕過。請嘗試透過瀏覽器選單手動「新增至主畫面」。');
+                console.log('Add to Home Screen button clicked, but no deferredInstallPrompt available. PWA might already be installed or criteria not met.');
+            }
+        });
+
+
+        appView.addEventListener('click', async (event) => {
+            const button = event.target.closest('.copy-button');
+            if (button) {
+                const targetId = button.getAttribute('data-clipboard-target-id');
+                const targetElement = document.getElementById(targetId);
+
+                if (targetElement) {
+                    const clone = targetElement.cloneNode(true);
+                    const buttonInClone = clone.querySelector('.copy-button');
+                    if (buttonInClone) {
+                        buttonInClone.remove();
+                    }
+                    let textToCopy = clone.innerText || clone.textContent || "";
+                    const lang = currentTargetLanguage;
+                    const prefixes = [
+                        i18n[lang]?.apiResponsePrefix,
+                        i18n[lang]?.moreInfoPrefix
+                    ].filter(Boolean);
+
+                    for (const prefix of prefixes) {
+                        if (textToCopy.startsWith(prefix)) {
+                            textToCopy = textToCopy.substring(prefix.length).trim();
+                            break;
+                        }
+                    }
+
+                    if (textToCopy.trim()) {
+                        try {
+                            await navigator.clipboard.writeText(textToCopy);
+                            const originalTextKey = 'copyButtonText';
+                            const copiedTextKey = 'copiedButtonText';
+                            button.textContent = i18n[lang]?.[copiedTextKey] || '已複製!';
+                            setTimeout(() => {
+                                const currentLangAfterTimeout = currentTargetLanguage;
+                                button.textContent = i18n[currentLangAfterTimeout]?.[originalTextKey] || '複製';
+                            }, 2000);
+                        } catch (err) {
+                            console.error('Failed to copy: ', err);
+                            const failedAlertKey = 'copyFailedAlert';
+                            alert(i18n[lang]?.[failedAlertKey] || '複製失敗!');
+                        }
+                    } else {
+                        const noContentAlertKey = 'noContentCopyAlert';
+                        alert(i18n[lang]?.[noContentCopyAlert] || '沒有內容可以複製。');
+                    }
+                }
+            }
+        });
+
+        // Initial load and app start logic
+        loadSettings(); // Loads language and updates UI for settings view
+
+        const lastUsedLanguage = localStorage.getItem('targetLanguage');
+        if (lastUsedLanguage) {
+            // Language is set, skip settings and go to app view
+            settingsView.classList.add('hidden');
+            appView.classList.remove('hidden');
+            // Ensure app view UI strings are also up-to-date based on loaded language
+            // updateUIStrings(lastUsedLanguage); // loadSettings already calls this
+            startCamera();
+        } else {
+            // First time use or language not set, show settings view
+            settingsView.classList.remove('hidden');
+            appView.classList.add('hidden');
+            // updateUIStrings for settings view is handled by loadSettings
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js') // Assuming sw.js is in the same directory
+                    .then(registration => {
+                        console.log('Service Worker registered successfully with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+    </script>
+</body>
+</html>

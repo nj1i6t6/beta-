@@ -1,0 +1,104 @@
+/* 全域設定 */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #1a73e8;
+    margin-bottom: 0.5rem;
+}
+
+.status {
+    color: #5f6368;
+    margin-bottom: 1.5rem;
+    min-height: 20px;
+    text-align: center;
+}
+
+/* 主要容器 */
+.container {
+    display: flex;
+    justify-content: space-around;
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 900px;
+}
+
+/* 左右翻譯區塊 */
+.side {
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h2 {
+    color: #5f6368;
+    margin-top: 0;
+}
+
+/* 下拉式選單 */
+select {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: #f8f9fa;
+}
+
+/* 按鈕 */
+button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #1a73e8;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-bottom: 1.5rem;
+}
+
+/* 按鈕禁用時的樣式 */
+button:disabled {
+    background-color: #9e9e9e;
+    cursor: not-allowed;
+}
+
+/* 按鈕在連線中的特殊樣式 */
+button.active-session {
+    background-color: #d93025; /* 連線時變成紅色 */
+}
+
+
+/* 結果顯示區塊 */
+.result-box {
+    width: 100%;
+    min-height: 150px;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #202124;
+    overflow-y: auto;
+    word-wrap: break-word;
+}

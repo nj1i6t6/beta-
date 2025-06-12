@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即時語音翻譯 (Live API)</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="https://esm.run/@google/generative-ai"></script>
+</head>
+<body>
+
+    <h1>即時語音翻譯 (Live API)</h1>
+    <p class="status" id="status-text">請設定語言並點擊任一邊的「開始翻譯」</p>
+
+    <div class="container">
+        <div class="side" id="left-side">
+            <h2>己方語言</h2>
+            <select id="left-lang">
+                <option value="zh-TW">繁體中文 (台灣)</option>
+                <option value="en-US">English (US)</option>
+                <option value="ja-JP">日本語</option>
+                <option value="ko-KR">한국어</option>
+            </select>
+            <button id="left-btn" class="translate-btn" data-source="left" data-target="right">開始翻譯</button>
+            <div class="result-box" id="left-result"></div>
+        </div>
+
+        <div class="side" id="right-side">
+            <h2>對方語言</h2>
+            <select id="right-lang">
+                <option value="en-US">English (US)</option>
+                <option value="zh-TW">繁體中文 (台灣)</option>
+                <option value="ja-JP">日本語</option>
+                <option value="ko-KR">한국어</option>
+            </select>
+            <button id="right-btn" class="translate-btn" data-source="right" data-target="left">開始翻譯</button>
+            <div class="result-box" id="right-result"></div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
