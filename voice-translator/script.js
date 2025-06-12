@@ -1,8 +1,9 @@
-// script.js (真正最終版)
+// voice-translator/script.js (針對頁面跳轉的最終修正)
 
 import { GoogleGenAI, Modality } from "https://esm.run/@google/genai";
 
 // --- DOM 元素選擇 ---
+// ... (這部分不變)
 const leftLangSelect = document.getElementById('left-lang');
 const rightLangSelect = document.getElementById('right-lang');
 const leftBtn = document.getElementById('left-btn');
@@ -16,6 +17,7 @@ const allButtons = [leftBtn, rightBtn];
 const API_KEY = 'AIzaSyC2l7mrzCMYcZ33pAOldgVbBiCxGvBuizc'; // 請務必替換成您自己的 API 金鑰
 
 // --- 全域狀態變數 ---
+// ... (這部分不變)
 let session;
 let audioContext;
 let microphoneStream;
@@ -70,6 +72,10 @@ async function toggleTranslationSession(clickedBtn) {
 
     try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // 在新版 Chrome 中，可能需要使用者互動後才能 resume AudioContext
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
         await audioContext.audioWorklet.addModule('audio-processor.js');
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         microphoneStream = stream;
@@ -83,13 +89,9 @@ async function toggleTranslationSession(clickedBtn) {
         
         session = await genAI.live.connect({
             model: "gemini-2.5-flash-preview-native-audio-dialog",
-            // 【核心修正】遵守 API 規定，修正 config 物件
             config: {
-                // 1. responseModalities 只能有一種，我們選擇 AUDIO
                 responseModalities: [Modality.AUDIO],
-                // 2. 透過 outputAudioTranscription 來要求翻譯後音訊的文字稿
                 outputAudioTranscription: {},
-                // 系統指令和輸入轉錄保持不變
                 systemInstruction: `You are a real-time translator. The user will speak in ${sourceLangText}, and you must respond with the translated text and audio in ${targetLangText}. Do not add any extra explanations.`,
                 inputAudioTranscription: {},
             },
@@ -134,21 +136,14 @@ async function toggleTranslationSession(clickedBtn) {
     }
 }
 
-/**
- * 處理來自 Live API 的即時訊息
- */
+// ... handleLiveMessage, playNextAudioChunk 函式不變 ...
 function handleLiveMessage(message, sourceResultBox, targetResultBox) {
-    // 處理輸入語音的轉錄文字
     if (message.serverContent?.inputTranscription?.text) {
         sourceResultBox.textContent = message.serverContent.inputTranscription.text;
     }
-
-    // 【核心修正】從 outputTranscription 獲取翻譯後的文字
     if (message.serverContent?.outputTranscription?.text) {
         targetResultBox.textContent = message.serverContent.outputTranscription.text;
     }
-    
-    // 處理翻譯後的音訊 (這部分不變)
     if (message.data) {
         const pcm16Data = base64ToInt16Array(message.data);
         const float32Data = convertInt16ToFloat32(pcm16Data);
@@ -157,12 +152,10 @@ function handleLiveMessage(message, sourceResultBox, targetResultBox) {
             playNextAudioChunk();
         }
     }
-    
     if(message.serverContent?.turnComplete) {
          statusText.textContent = "翻譯完成！您可以繼續說話...";
     }
 }
-
 function playNextAudioChunk() {
     if (audioQueue.length === 0) { isPlaying = false; return; }
     isPlaying = true;
@@ -215,7 +208,7 @@ async function stopSession() {
 }
 
 
-// --- 音訊處理輔助函式 --- (這部分不變)
+// ... 音訊處理輔助函式不變 ...
 function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
     if (inputSampleRate === outputSampleRate) return buffer;
     const sampleRateRatio = inputSampleRate / outputSampleRate;
@@ -265,3 +258,12 @@ function convertInt16ToFloat32(buffer) {
     }
     return output;
 }
+
+// 【核心修正】新增頁面生命週期事件監聽器
+window.addEventListener('pagehide', (event) => {
+    // 當使用者導航離開此頁面時（例如點擊返回按鈕），
+    // 確保我們的 session 被妥善關閉。
+    if (isSessionActive) {
+        stopSession();
+    }
+});
